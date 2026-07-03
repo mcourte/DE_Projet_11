@@ -1,74 +1,64 @@
-# =============================================================================
-# MODULE : dataset_generator.py
-# Rôle   : générer automatiquement un jeu de données annoté (questions / réponses)
-# =============================================================================
-#
-# Pour évaluer la qualité du RAG, on a besoin d'un jeu de test avec des
-# questions et leurs réponses "de référence" (ce qu'on appelle le gold standard).
-#
-# Créer ce jeu à la main serait long. L'idée ici est de demander à Mistral
-# de générer des questions et réponses à partir des événements du CSV.
-# Ce n'est pas parfait, mais c'est suffisant pour un POC.
-#
-# ─────────────────────────────────────────────────────────────────────────────
-# ÉTAPE 1 — Les imports
-# ─────────────────────────────────────────────────────────────────────────────
-# Tu auras besoin de :
-#   - json
-#   - os
-#   - pandas
-#   - ChatMistralAI  (depuis langchain_mistralai)
-#   - PromptTemplate (depuis langchain.prompts)
-#   - load_dotenv
-#
-# ─────────────────────────────────────────────────────────────────────────────
-# ÉTAPE 2 — Définir le prompt de génération
-# ─────────────────────────────────────────────────────────────────────────────
-# Définis une constante GENERATION_PROMPT (chaîne de caractères) avec ce prompt :
-#
-#   Tu es un testeur d'application. À partir de l'événement culturel suivant,
-#   génère une question naturelle qu'un utilisateur pourrait poser à un chatbot,
-#   ainsi que la réponse précise attendue.
-#
-#   Événement :
-#   - Titre : {title}
-#   - Description : {description}
-#   - Ville : {city}
-#   - Date : {first_date}
-#
-#   Réponds uniquement en JSON valide, sans texte autour :
-#   {{"question": "...", "expected_answer": "..."}}
-#
-# Note : les doubles accolades {{ }} sont nécessaires pour échapper les
-# accolades littérales dans une f-string / PromptTemplate.
-#
-# ─────────────────────────────────────────────────────────────────────────────
-# ÉTAPE 3 — Fonction generate_qa_pairs(df, n_samples=20, output_path)
-# ─────────────────────────────────────────────────────────────────────────────
-# Cette fonction génère n_samples paires question/réponse à partir du DataFrame.
-#
-# Enchaîne dans l'ordre :
-#
-#   1. Instancie ChatMistralAI(model="mistral-large-latest", temperature=0.7)
-#      (temperature plus haute = questions plus variées)
-#
-#   2. Crée un PromptTemplate avec GENERATION_PROMPT
-#
-#   3. Échantillonne le DataFrame : df.sample(min(n_samples, len(df)))
-#
-#   4. Pour chaque ligne de l'échantillon :
-#      a. Formate le prompt avec les données de l'événement
-#         (tronque la description à 400 caractères pour limiter les tokens)
-#      b. Appelle llm.invoke(prompt_formaté)
-#      c. Récupère response.content (c'est le JSON retourné par Mistral)
-#      d. Si la réponse est entourée de ```json ... ```, nettoie-la d'abord
-#      e. Parse avec json.loads()
-#      f. Ajoute l'id de l'événement source : qa["source_event_id"] = row["id"]
-#      g. Ajoute la paire à ta liste
-#      h. En cas d'erreur de parsing JSON, passe à l'événement suivant (continue)
-#
-#   5. Sauvegarde la liste avec json.dump() dans output_path
-#
-#   6. Affiche le nombre de paires générées et retourne la liste
-#
-# Chemin par défaut : output_path = "data/processed/qa_dataset.json"
+import json
+import os
+import pandas as pd
+from langchain_mistralai import ChatMistralAI
+from langchain.prompts import PromptTemplate
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GENERATION_PROMPT = """Tu es un testeur d'application. À partir de l'événement culturel suivant,
+génère une question naturelle qu'un utilisateur pourrait poser à un chatbot,
+ainsi que la réponse précise attendue.
+
+Événement :
+- Titre : {title}
+- Description : {description}
+- Ville : {city}
+- Date : {first_date}
+
+Réponds uniquement en JSON valide, sans texte autour :
+{{"question": "...", "expected_answer": "..."}}"""
+
+
+def generate_qa_pairs(
+    df: pd.DataFrame,
+    n_samples: int = 20,
+    output_path: str = "data/processed/qa_dataset.json",
+) -> list:
+    llm = ChatMistralAI(
+        model="mistral-large-latest",
+        mistral_api_key=os.getenv("MISTRAL_API_KEY"),
+        temperature=0.7,
+    )
+    prompt = PromptTemplate(
+        template=GENERATION_PROMPT,
+        input_variables=["title", "description", "city", "first_date"],
+    )
+
+    sample = df.sample(min(n_samples, len(df)))
+    qa_pairs = []
+
+    for _, row in sample.iterrows():
+        formatted_prompt = prompt.format(
+            title=row["title"],
+            description=str(row["description"])[:400],
+            city=row["city"],
+            first_date=row["first_date"],
+        )
+        try:
+            response = llm.invoke(formatted_prompt)
+            content = response.content.strip()
+            if content.startswith("```"):
+                content = content.split("```")[1].replace("json", "").strip()
+            qa = json.loads(content)
+            qa["source_event_id"] = row["id"]
+            qa_pairs.append(qa)
+            print(f"✓ Q/R générée : {qa['question'][:60]}...")
+        except (json.JSONDecodeError, IndexError):
+            continue
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(qa_pairs, f, ensure_ascii=False, indent=2)
+    print(f"\n{len(qa_pairs)} paires Q/R sauvegardées → {output_path}")
+    return qa_pairs
