@@ -1,6 +1,6 @@
 # LangChain
 langchain==0.3.25
-langchain-core==0.3.60
+langchain-core==0.3.65
 langchain-community==0.3.25
 langchain-mistralai==0.2.10
 
@@ -8,8 +8,8 @@ langchain-mistralai==0.2.10
 mistralai==1.5.0
 
 # Base vectorielle
-faiss-cpu==1.9.0
-numpy==1.26.4
+faiss-cpu==1.9.0.post1
+numpy==2.1.3
 
 # Données
 requests==2.32.3
@@ -21,6 +21,9 @@ python-dotenv==1.0.1
 # Tests
 pytest==8.3.5
 pytest-asyncio==0.24.0
+
+# Interface web
+streamlit==1.45.1
 
 # Utilitaires
 tqdm==4.67.1
