@@ -25,7 +25,7 @@ Réponds uniquement en JSON valide, sans texte autour :
 
 
 def generate_qa_pairs(
-    df: pd.DataFrame,
+    df_clean_events: pd.DataFrame,
     n_samples: int = 20,
     output_path: str = "data/processed/qa_dataset.json",
 ) -> list:
@@ -39,7 +39,7 @@ def generate_qa_pairs(
         input_variables=["title", "description", "city", "first_date"],
     )
 
-    sample = df.sample(min(n_samples, len(df)))
+    sample = df_clean_events.sample(min(n_samples, len(df_clean_events)))
     qa_pairs = []
 
     for _, row in sample.iterrows():
