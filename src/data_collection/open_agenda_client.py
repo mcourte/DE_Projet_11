@@ -1,11 +1,14 @@
 import requests
 import json
 import os
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 OPEN_AGENDA_API_KEY = os.getenv("OPEN_AGENDA_API_KEY")
 BASE_URL = "https://api.openagenda.com/v2"
@@ -32,9 +35,9 @@ def fetch_events(city: str, region: str, max_pages: int = 100) -> list:
         if not batch:
             break
         events.extend(batch)
-        print(f"Page {page + 1} — {len(batch)} événements récupérés")
+        logger.info(f"Page {page + 1} — {len(batch)} événements récupérés")
 
-    print(f"\nTotal : {len(events)} événements")
+    logger.info(f"Total : {len(events)} événements")
     return events
 
 
@@ -42,4 +45,4 @@ def save_raw_events(events: list, output_path: str = "data/raw/events.json") -> 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(events, f, ensure_ascii=False, indent=2)
-    print(f"{len(events)} événements sauvegardés → {output_path}")
+    logger.info(f"{len(events)} événements sauvegardés → {output_path}")

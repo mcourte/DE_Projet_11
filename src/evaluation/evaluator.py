@@ -1,10 +1,13 @@
 import json
+import logging
 import os
 from langchain_mistralai import ChatMistralAI
 from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 EVAL_PROMPT = """Tu es un juge impartial chargé de comparer deux réponses.
 Réponds uniquement par OUI si les deux réponses ont le même sens et les mêmes informations essentielles,
@@ -48,11 +51,12 @@ def evaluate(
             "actual": actual,
             "correct": is_correct,
         })
-        print(f"{'✓' if is_correct else '✗'} {item['question'][:60]}...")
+        status = "OK" if is_correct else "KO"
+        logger.info(f"[{status}] {item['question'][:60]}...")
 
     score = sum(1 for r in results if r["correct"]) / len(results) if results else 0
 
-    print(f"\n=== Résultat évaluation RAG ===")
-    print(f"Score : {sum(r['correct'] for r in results)}/{len(results)} ({score:.1%})")
+    logger.info("=== Résultat évaluation RAG ===")
+    logger.info(f"Score : {sum(r['correct'] for r in results)}/{len(results)} ({score:.1%})")
 
     return {"score": score, "details": results}

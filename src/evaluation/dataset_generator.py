@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import pandas as pd
 from langchain_mistralai import ChatMistralAI
@@ -6,6 +7,8 @@ from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 GENERATION_PROMPT = """Tu es un testeur d'application. À partir de l'événement culturel suivant,
 génère une question naturelle qu'un utilisateur pourrait poser à un chatbot,
@@ -54,11 +57,11 @@ def generate_qa_pairs(
             qa = json.loads(content)
             qa["source_event_id"] = row["id"]
             qa_pairs.append(qa)
-            print(f"✓ Q/R générée : {qa['question'][:60]}...")
+            logger.info(f"Q/R générée : {qa['question'][:60]}...")
         except (json.JSONDecodeError, IndexError):
             continue
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(qa_pairs, f, ensure_ascii=False, indent=2)
-    print(f"\n{len(qa_pairs)} paires Q/R sauvegardées → {output_path}")
+    logger.info(f"{len(qa_pairs)} paires Q/R sauvegardées → {output_path}")
     return qa_pairs
