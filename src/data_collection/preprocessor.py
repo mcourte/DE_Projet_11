@@ -51,9 +51,10 @@ def extract_fields(event: dict) -> dict:
 
     location = event.get("location", {})
     first_timing = event.get("firstTiming", {})
-    slug = event.get("slug", "")
+    site_web = event.get("site-web", "") or ""
     agenda_slug = OPEN_AGENDA_SLUG or str(event.get("originAgenda", {}).get("uid", ""))
-    url = f"https://openagenda.com/agendas/{agenda_slug}/events/{slug}" if slug else ""
+    agenda_url = f"https://openagenda.com/fr/{agenda_slug}" if agenda_slug else ""
+    url = site_web if site_web.startswith("http") else agenda_url
 
     return {
         "id": event.get("uid", ""),

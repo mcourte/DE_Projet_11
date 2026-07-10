@@ -199,7 +199,7 @@ for msg in st.session_state.messages:
             with st.expander("📎 Sources"):
                 for src in msg["sources"]:
                     date_str = src["first_date"][:10] if src["first_date"] and src["first_date"] != "N/A" else "—"
-                    link = f'<a href="{src["url"]}" target="_blank">↗ Voir l\'événement</a>' if src["url"] else ""
+                    link = f'<a href="{src["url"]}" target="_blank">↗ En savoir plus</a>' if src["url"] else ""
                     st.markdown(f"""
                     <div class="source-card">
                       <div class="title">{src['title']}</div>
@@ -236,7 +236,7 @@ if question:
             with st.expander("📎 Sources"):
                 for src in sources:
                     date_str = src["first_date"][:10] if src["first_date"] and src["first_date"] != "N/A" else "—"
-                    link = f'<a href="{src["url"]}" target="_blank">↗ Voir l\'événement</a>' if src["url"] else ""
+                    link = f'<a href="{src["url"]}" target="_blank">↗ En savoir plus</a>' if src["url"] else ""
                     st.markdown(f"""
                     <div class="source-card">
                       <div class="title">{src['title']}</div>
