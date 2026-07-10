@@ -88,14 +88,16 @@ copy .env.example .env
 | `MISTRAL_API_KEY` | ✅ | Clé API Mistral AI ([console.mistral.ai](https://console.mistral.ai)) |
 | `OPEN_AGENDA_API_KEY` | ✅ | Clé publique Open Agenda (`oa_pk_…`) |
 | `OPEN_AGENDA_UID` | ✅ | UID numérique de l'agenda ciblé (voir ci-dessous) |
+| `OPEN_AGENDA_SLUG` | ✅ | Slug texte de l'agenda (ex : `ete-rennes`) — pour les liens dans l'app |
 | `TARGET_CITY` | ✅ | Ville ciblée (ex : `Rennes`) — filtre post-collecte |
 | `TARGET_REGION` | ❌ | Région (ex : `Bretagne`) — informatif |
 
-### Trouver l'UID d'un agenda Open Agenda
+### Trouver l'UID et le slug d'un agenda Open Agenda
 
 1. Rechercher un agenda sur [openagenda.com](https://openagenda.com)
 2. Cliquer sur **Exporter** — l'URL API révèle l'UID : `/agendas/95408779/events`
-3. Renseigner `OPEN_AGENDA_UID=95408779` dans `.env`
+3. Le slug est visible dans l'URL de la page : `openagenda.com/fr/ete-rennes` → slug = `ete-rennes`
+4. Renseigner `OPEN_AGENDA_UID=95408779` et `OPEN_AGENDA_SLUG=ete-rennes` dans `.env`
 
 ---
 
@@ -125,7 +127,7 @@ python scripts/run_chatbot.py
 L'app s'ouvre sur `http://localhost:8501` avec :
 - Fond sombre, gradient violet/rose
 - Suggestions de questions prédéfinies
-- Cartes sources avec lien vers Open Agenda
+- Cartes sources avec lien vers le site de l'organisateur (ou l'agenda en fallback)
 - Bouton pour effacer la conversation
 
 ### Lancer les tests unitaires
@@ -144,7 +146,8 @@ Il suffit de deux variables et d'une commande :
 
 ```bash
 # 1. Mettre à jour .env
-OPEN_AGENDA_UID=XXXXXXXX   # UID trouvé sur openagenda.com > Exporter
+OPEN_AGENDA_UID=XXXXXXXX     # UID numérique — trouvé via le bouton Exporter
+OPEN_AGENDA_SLUG=nom-agenda  # Slug texte — visible dans l'URL openagenda.com/fr/nom-agenda
 TARGET_CITY=NomVille
 
 # 2. Reconstruire l'index

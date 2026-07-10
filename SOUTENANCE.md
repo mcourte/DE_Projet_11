@@ -76,7 +76,7 @@ Le pipeline complet — collecte, nettoyage, vectorisation, indexation — s'ex�
 python scripts/build_vectorstore.py
 ```
 
-Chaque étape est loguée avec horodatage. Le pipeline est **entièrement reproductible** : il suffit de modifier `OPEN_AGENDA_UID` et `TARGET_CITY` dans le `.env` pour cibler une autre ville.
+Chaque étape est loguée avec horodatage. Le pipeline est **entièrement reproductible** : il suffit de modifier `OPEN_AGENDA_UID`, `OPEN_AGENDA_SLUG` et `TARGET_CITY` dans le `.env` pour cibler une autre ville.
 
 ### Tests automatisés
 
@@ -142,7 +142,7 @@ Je vais vous poser trois questions représentatives.
 
 > *(Attendre la réponse — montrer les sources dans l'expander)*
 
-Vous voyez que la réponse cite des événements réels avec leur date et leur lien Open Agenda.
+Vous voyez que la réponse cite des événements réels avec leur date et un lien vers le site de l'organisateur.
 
 **Question 2 — Thématique :**
 > "Y a-t-il des activités pour enfants ce mois-ci ?"
