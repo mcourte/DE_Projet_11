@@ -1,8 +1,12 @@
 import json
 import logging
+import os
 import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +18,8 @@ def load_raw_events(path: str = "data/raw/events.json") -> list:
 
 def is_within_one_year(event: dict) -> bool:
     cutoff = datetime.now() - timedelta(days=365)
-    for timing in event.get("timings", []):
-        begin_str = timing.get("begin", "")
+    for key in ("firstTiming", "nextTiming", "lastTiming"):
+        begin_str = (event.get(key) or {}).get("begin", "")
         if not begin_str:
             continue
         try:
@@ -46,7 +50,10 @@ def extract_fields(event: dict) -> dict:
     description = description.encode("utf-8", errors="ignore").decode("utf-8")
 
     location = event.get("location", {})
-    timings = event.get("timings", [])
+    first_timing = event.get("firstTiming", {})
+    slug = event.get("slug", "")
+    agenda_uid = event.get("originAgenda", {}).get("uid", "")
+    url = f"https://openagenda.com/agendas/{agenda_uid}/events/{slug}" if slug else ""
 
     return {
         "id": event.get("uid", ""),
@@ -54,8 +61,8 @@ def extract_fields(event: dict) -> dict:
         "description": description,
         "city": location.get("city", ""),
         "address": location.get("address", ""),
-        "first_date": timings[0].get("begin", "") if timings else "",
-        "url": event.get("canonicalUrl", ""),
+        "first_date": first_timing.get("begin", ""),
+        "url": url,
     }
 
 
@@ -64,11 +71,21 @@ def build_dataframe(recent_events: list) -> pd.DataFrame:
     return pd.DataFrame(extracted_fields)
 
 
+TARGET_CITY = os.getenv("TARGET_CITY", "")
+
+
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    if df.empty:
+        return df
     df_cleaned = df.dropna(subset=["title", "description"])
     df_cleaned = df_cleaned[df_cleaned["description"].str.strip().str.len() >= 20]
     df_cleaned = df_cleaned[df_cleaned["city"].str.strip() != ""]
-    logger.info(f"{len(df_cleaned)} événements après nettoyage (descriptions vides, villes manquantes)")
+    if TARGET_CITY:
+        df_cleaned = df_cleaned[
+            df_cleaned["city"].str.lower() == TARGET_CITY.lower()
+        ]
+        logger.info(f"Filtre ville '{TARGET_CITY}' appliqué : {len(df_cleaned)} événements")
+    logger.info(f"{len(df_cleaned)} événements après nettoyage")
     return df_cleaned
 
 
