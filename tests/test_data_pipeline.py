@@ -29,8 +29,8 @@ class TestDataFreshness:
 
         for event in raw_events:
             has_recent_timing = False
-            for timing in event.get("timings", []):
-                begin_str = timing.get("begin", "")
+            for key in ("firstTiming", "nextTiming", "lastTiming"):
+                begin_str = (event.get(key) or {}).get("begin", "")
                 if not begin_str:
                     continue
                 try:
