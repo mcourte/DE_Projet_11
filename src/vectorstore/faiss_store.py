@@ -47,7 +47,15 @@ def build_index(df: pd.DataFrame) -> FAISS:
     chunks = chunk_documents(documents)
 
     logger.info("Vectorisation en cours (appel API Mistral)...")
-    faiss_index = FAISS.from_documents(chunks, embeddings_model)
+    batch_size = 32
+    faiss_index = None
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i : i + batch_size]
+        logger.info(f"Batch {i // batch_size + 1}/{(len(chunks) - 1) // batch_size + 1} ({len(batch)} chunks)...")
+        if faiss_index is None:
+            faiss_index = FAISS.from_documents(batch, embeddings_model)
+        else:
+            faiss_index.add_documents(batch)
 
     Path(FAISS_INDEX_PATH).parent.mkdir(parents=True, exist_ok=True)
     faiss_index.save_local(FAISS_INDEX_PATH)
