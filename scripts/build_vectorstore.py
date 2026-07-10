@@ -14,11 +14,15 @@ from dotenv import load_dotenv
 from src.data_collection.open_agenda_client import fetch_events, save_raw_events
 from src.data_collection.preprocessor import preprocess
 from src.vectorstore.faiss_store import build_index
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
+print("Clé API:", os.getenv("OPEN_AGENDA_API_KEY"))
 load_dotenv()
 
 
 logger = logging.getLogger(__name__)
+
 
 
 def main():
