@@ -29,7 +29,7 @@ Pour répondre aux besoins du projet — recherche vectorielle rapide, générat
 
 La contrainte principale côté vectorisation, c'est l'API Mistral qui n'accepte pas des batchs de taille arbitraire. Sur un corpus de 1 078 chunks, un envoi en bloc provoquait une erreur 400.
 
-J'ai mesuré et résolu ce goulot d'étranglement en **découpant la vectorisation en batchs de 32 chunks** — c'est le critère CE3 sur les optimisations pour réduire les goulots d'étranglement. Voici le code :
+J'ai mesuré et résolu ce goulot d'étranglement en **découpant la vectorisation en batchs de 32 chunks**. Voici le code :
 
 ```python
 for i in range(0, len(chunks), 32):
@@ -47,7 +47,7 @@ Pour la recherche, FAISS est chargé **une seule fois en mémoire** via `@st.cac
 
 ### Collecte et particularités de l'API
 
-L'API Open Agenda v2 a une structure non documentée que j'ai dû investiguer. Les événements n'exposent pas de tableau `timings[]` comme attendu, mais trois champs distincts : `firstTiming`, `nextTiming`, `lastTiming`. Ce genre d'incohérence de format, c'est exactement le CE1 sur la gestion des incohérences de données.
+L'API Open Agenda v2 a une structure non documentée que j'ai dû investiguer. Les événements n'exposent pas de tableau `timings[]` comme attendu, mais trois champs distincts : `firstTiming`, `nextTiming`, `lastTiming`. J'ai dû adapter le code pour gérer ces incohérences de format.
 
 J'ai adapté la fonction de filtrage temporel en conséquence :
 
@@ -80,7 +80,7 @@ Chaque étape est loguée avec horodatage. Le pipeline est **entièrement reprod
 
 ### Tests automatisés
 
-J'ai mis en place **7 tests unitaires** qui vérifient en continu la cohérence des données — c'est le CE3 sur les mécanismes automatisés :
+J'ai mis en place **7 tests unitaires** qui vérifient en continu la cohérence des données :
 
 - Existence des fichiers bruts et nettoyés
 - Fraîcheur temporelle (aucun événement de plus d'un an)
@@ -112,11 +112,11 @@ Réponds uniquement à partir du contexte fourni.
 Si l'information n'est pas dans le contexte, dis-le clairement.
 ```
 
-C'est le CE2 sur la personnalisation aux spécificités métiers. Résultat concret : le modèle ne fabrique jamais d'événements inexistants.
+Résultat concret : le modèle ne fabrique jamais d'événements inexistants.
 
 ### Architecture LangChain
 
-LangChain orchestre l'interaction entre les trois briques — c'est le CE3 sur l'intégration :
+LangChain orchestre l'interaction entre les trois briques :
 
 1. La question utilisateur est vectorisée via `mistral-embed`
 2. FAISS retourne les **5 documents les plus proches** (`k=5`)
