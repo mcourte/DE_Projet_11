@@ -52,8 +52,8 @@ def extract_fields(event: dict) -> dict:
     location = event.get("location", {})
     first_timing = event.get("firstTiming", {})
     slug = event.get("slug", "")
-    agenda_uid = event.get("originAgenda", {}).get("uid", "")
-    url = f"https://openagenda.com/agendas/{agenda_uid}/events/{slug}" if slug else ""
+    agenda_slug = OPEN_AGENDA_SLUG or str(event.get("originAgenda", {}).get("uid", ""))
+    url = f"https://openagenda.com/agendas/{agenda_slug}/events/{slug}" if slug else ""
 
     return {
         "id": event.get("uid", ""),
@@ -72,6 +72,7 @@ def build_dataframe(recent_events: list) -> pd.DataFrame:
 
 
 TARGET_CITY = os.getenv("TARGET_CITY", "")
+OPEN_AGENDA_SLUG = os.getenv("OPEN_AGENDA_SLUG", "")
 
 
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
