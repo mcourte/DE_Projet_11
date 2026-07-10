@@ -1,6 +1,3 @@
-from langchain.chains import RetrievalQA
-
-
 def format_sources(source_documents: list) -> list[dict]:
     sources = []
     for doc in source_documents[:3]:
